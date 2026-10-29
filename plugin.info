@@ -3,7 +3,7 @@
     "description": "Drag-to-connect ports on kind instances: link tiddlers by drawing a wire from a ref field",
     "name": "ports",
     "author": "rimir",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "core-version": ">=5.4.0",
     "source": "https://github.com/rimir-cc/tw-ports",
     "plugin-type": "plugin",

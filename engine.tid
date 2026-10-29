@@ -27,7 +27,7 @@ type: text/vnd.tiddlywiki
 \function ports.option-source(type-tid, field-key, src-kind) [function[ports.option-sources]] :filter[function[ports.os-kind-ok],<currentTiddler>,<src-kind>] :filter[function[ports.os-field-ok],<currentTiddler>,<field-key>] :filter[function[ports.os-ref-ok],<currentTiddler>,<type-tid>,<field-key>] :sort:number:reverse[function[ports.os-score],<currentTiddler>] +[first[]]
 \function ports.option-filter(os) [<os>get[filter]!is[blank]] ~[[$:/plugins/rimir/ports/default-option-filter]get[text]trim[]]
 
-<!-- Dock candidates for a port: kind's ref candidates, narrowed by the option filter and the typed search -->
-\function ports.candidates(type-tid, field-key, src, opt, q) [function[kind.ref-candidates],<type-tid>,<field-key>] -[<src>] +[subfilter<opt>] +[search:caption,title:literal<q>]
+<!-- Dock candidates for a port: kind's ref candidates, narrowed by the option filter and the typed search, by caption -->
+\function ports.candidates(type-tid, field-key, src, opt, q) [function[kind.ref-candidates],<type-tid>,<field-key>] -[<src>] +[subfilter<opt>] +[search:caption,title:literal<q>] :sort:string:caseinsensitive[get[caption]else<currentTiddler>]
 \function ports.recent(field-key) [[$:/state/rimir/ports/recent/]addsuffix<field-key>get[list]enlist-input[]]
 \function ports.caption(tid) [<tid>get[caption]!is[blank]] ~[<tid>]

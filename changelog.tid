@@ -4,4 +4,5 @@ type: text/vnd.tiddlywiki
 ! Changelog
 
 |!Version |!Date |!Changes |
+|v0.1.1 |2026-10-29 |Dock candidates sorted by caption (deterministic order). |
 |v0.1.0 |2026-10-29 |First version: hover handle on kind instances in the story, port flyout (labelled ref fields, empty ports collapsed, click to list targets, × to unlink), drag-to-connect with a live wire, context dock that opens on drag (ref candidates, option sources, recent first, type to filter, Esc cancels), hover wires to visible targets. |

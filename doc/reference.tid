@@ -70,7 +70,7 @@ For bridges that put handles elsewhere (`$:/plugins/rimir/ports/handle`):
 |`ports.values(type-tid, tid, field-key)` |Linked titles of one port |
 |`ports.count(type-tid, tid, exclude)` |Number of links |
 |`ports.option-source(type-tid, field-key, src-kind)` |Title of the option source that applies |
-|`ports.candidates(type-tid, field-key, src, opt, q)` |Dock candidates |
+|`ports.candidates(type-tid, field-key, src, opt, q)` |Dock candidates: kind's ref candidates minus the source, narrowed by the option filter and the search, sorted by caption (title when blank) |
 
 !! Restart
 
