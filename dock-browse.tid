@@ -1,0 +1,24 @@
+title: $:/plugins/rimir/ports/dock-browse
+type: text/vnd.tiddlywiki
+
+\whitespace trim
+<!-- Dock content when opened by hand: find instances by caption or title. -->
+<div class="ports-dock-head">
+<div class="ports-eyebrow">Connect</div>
+<div class="ports-dock-title">Browse</div>
+<div class="ports-dock-sub">Drag a port and this panel shows only what fits it.</div>
+</div>
+<!-- The input stays outside the $let that re-binds on every keystroke (it would lose focus) -->
+<$edit-text tiddler="$:/temp/rimir/ports/dock-search" tag="input" class="ports-search" placeholder="Find an instance…" default=""/>
+<$let q={{$:/temp/rimir/ports/dock-search}}>
+<div class="ports-dock-list">
+<%if [<q>is[blank]] %>
+<div class="ports-empty">Type to find kind instances by caption or title.</div>
+<%else%>
+<$list filter="[all[tiddlers]has[kind.type]!has[kind.fields]!is[draft]search:caption,title:literal<q>] :sort:string:caseinsensitive[function[ports.caption],<currentTiddler>] +[first[40]]" variable="cand" emptyMessage="""<div class="ports-empty">No instance matches.</div>""">
+<$let linked="no"><$transclude $tiddler="$:/plugins/rimir/ports/dock-tile"/></$let>
+</$list>
+<%endif%>
+</div>
+</$let>
+<div class="ports-dock-foot">Opened by hand. It stays open until you close it.</div>

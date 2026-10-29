@@ -1,0 +1,51 @@
+title: $:/plugins/rimir/ports/dock-drag
+type: text/vnd.tiddlywiki
+
+\whitespace trim
+<!-- Dock content while a port is dragged: what fits the port, recent first.
+     The typed search arrives in $:/temp/rimir/ports/drag!!search. -->
+<$let
+	src={{$:/temp/rimir/ports/drag!!src}}
+	field-key={{$:/temp/rimir/ports/drag!!field}}
+	q={{$:/temp/rimir/ports/drag!!search}}
+	type-tid={{{ [function[ports.type-tid],<src>] }}}
+	src-kind={{{ [<src>get[kind.type]] }}}
+	os={{{ [function[ports.option-source],<type-tid>,<field-key>,<src-kind>] }}}
+	opt={{{ [function[ports.option-filter],<os>] }}}
+	multi={{{ [function[kind.field-cardinality],<type-tid>,<field-key>match[multi]] }}}
+	linked={{{ [function[ports.values],<type-tid>,<src>,<field-key>format:titlelist[]join[ ]] }}}
+	inverse={{{ [function[kind.field-prop],<type-tid>,<field-key>,[inverse]] }}}
+	accepts={{{ [function[kind.ref-types],<type-tid>,<field-key>join[, ]] ~[[any kind]] }}}
+	limit="60"
+>
+<$let
+	recent={{{ [function[ports.recent],<field-key>] :intersection[function[ports.candidates],<type-tid>,<field-key>,<src>,<opt>,<q>] -[enlist<linked>] +[first[5]format:titlelist[]join[ ]] }}}
+	n-rest={{{ [function[ports.candidates],<type-tid>,<field-key>,<src>,<opt>,<q>] -[enlist<recent>] +[count[]] }}}
+>
+<div class="ports-dock-head">
+<div class="ports-eyebrow"><$text text={{{ [<multi>match[multi]then[Connect · adds]else[Connect · replaces]] }}}/></div>
+<div class="ports-dock-title"><$text text={{{ [function[kind.field-icon],<type-tid>,<field-key>] [function[kind.field-caption],<type-tid>,<field-key>] +[join[ ]] }}}/></div>
+<div class="ports-dock-sub"><$text text={{{ [function[ports.caption],<src>addprefix[of ]] [<accepts>addprefix[accepts ]] [<inverse>!is[blank]addprefix[mirrors to ]] +[join[ · ]] }}}/></div>
+</div>
+<div class={{{ ports-search is-live [<q>is[blank]then[is-empty]] +[join[ ]] }}}><%if [<q>is[blank]] %>Keep holding and type to filter…<%else%><$text text=<<q>>/><%endif%></div>
+<div class="ports-dock-list">
+<%if [<recent>!is[blank]] %>
+<div class="ports-sec">Recent</div>
+<$list filter="[enlist<recent>]" variable="cand"><$let linked="no"><$transclude $tiddler="$:/plugins/rimir/ports/dock-tile"/></$let></$list>
+<%endif%>
+<%if [<n-rest>!match[0]] %>
+<div class="ports-sec"><$text text={{{ [<recent>!is[blank]then[All]else[Matching]] [<n-rest>] +[join[ · ]] }}}/></div>
+<$list filter="[function[ports.candidates],<type-tid>,<field-key>,<src>,<opt>,<q>] -[enlist<recent>] :sort:string:caseinsensitive[function[ports.caption],<currentTiddler>] +[first<limit>]" variable="cand">
+<$let linked={{{ [enlist<linked>match<cand>then[yes]] }}}><$transclude $tiddler="$:/plugins/rimir/ports/dock-tile"/></$let>
+</$list>
+<%if [<n-rest>compare:integer:gt<limit>] %><div class="ports-empty"><$text text={{{ [[Showing ]addsuffix<limit>addsuffix[ of ]addsuffix<n-rest>addsuffix[. Type to narrow it down.]] }}}/></div><%endif%>
+<%endif%>
+<%if [<recent>is[blank]] :filter[<n-rest>match[0]] %>
+<div class="ports-empty"><$text text={{{ [<q>is[blank]then[Nothing in this wiki fits this port yet.]] ~[<q>addprefix[Nothing matches “]addsuffix[”.]] }}}/></div>
+<%endif%>
+</div>
+<div class="ports-dock-foot">
+<%if [<os>!is[blank]] %>Options from&#32;<$link to=<<os>>><$text text={{{ [<os>get[caption]] ~[<os>] }}}/></$link>.&#32;<%else%>All instances of the accepted kinds.&#32;<%endif%>Recent first. Esc cancels.
+</div>
+</$let>
+</$let>

@@ -1,0 +1,11 @@
+title: $:/plugins/rimir/ports/dock-tile
+type: text/vnd.tiddlywiki
+
+\whitespace trim
+<!-- One dock tile. Needs `cand` in scope; `linked` = yes marks it as already linked.
+     data-ports-target makes it a drop target for the ports-layer widget. -->
+<div class={{{ ports-tile [<linked>match[yes]then[is-linked]] +[join[ ]] }}} data-ports-target=<<cand>>>
+<span class="ports-tile-ico"><$text text={{{ [function[kind.inst-icon],<cand>] }}}/></span>
+<span class="ports-tile-cap"><$text text={{{ [function[ports.caption],<cand>] }}}/></span>
+<span class="ports-tile-meta"><%if [<linked>match[yes]] %>✓ linked<%else%><$text text={{{ [<cand>get[kind.type]] }}}/><%endif%></span>
+</div>

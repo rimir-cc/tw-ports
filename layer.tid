@@ -1,0 +1,12 @@
+title: $:/plugins/rimir/ports/layer
+tags: $:/tags/PageTemplate
+type: text/vnd.tiddlywiki
+
+\whitespace trim
+\import $:/plugins/rimir/ports/engine
+<%if [function[ports.enabled]] %>
+<$ports-layer>
+<$transclude $tiddler="$:/plugins/rimir/ports/flyout"/>
+<$transclude $tiddler="$:/plugins/rimir/ports/dock"/>
+</$ports-layer>
+<%endif%>

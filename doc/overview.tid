@@ -1,0 +1,36 @@
+created: 20261029120000000
+modified: 20261029120000000
+rdt.hub-category: ui-framework
+rdt.hub-category-name: UI Framework & Domain Model
+rdt.hub-order: 20
+rdt.order: 1
+rdt.plugin-key: ports
+rdt.plugin-name: ports
+rdt.plugin-subtitle: Drag-to-connect ports on kind instances
+rdt.section: Overview
+title: $:/plugins/rimir/ports/doc/overview
+type: text/vnd.tiddlywiki
+
+<$transclude $tiddler="$:/plugins/rimir/doc-template/templates/page">
+<$fill $name="body">
+
+!! What it does
+
+Ports turns the `ref` fields of [[kind|$:/plugins/rimir/kind]] instances into connectors you can drag, like the ports of blocks in a graphical editor. You keep working in the normal story river: each instance gets one small handle on its right border, and links are drawn as wires from a port to the target tiddler.
+
+!! How you use it
+
+# ''Hover'' a tiddler — its handle appears on the right border (filled = it has links, the number = how many).
+# ''Hover the handle'' — the port flyout slides out: one row per ref field with its icon, caption and current target (or count).
+# ''Drag'' a port — a wire follows the pointer; tiddlers that fit the port are outlined; the dock on the right opens with the candidates. Type to filter, Esc cancels.
+# ''Release'' on a tiddler or a dock tile — the link is written. Single fields are replaced, multi fields get the target added.
+# ''Hover'' a filled port to see wires to its visible targets; ''click'' it to list the targets, each with × to unlink.
+
+!! What it builds on
+
+* Which fields are ports, their captions and icons, what they accept (`ref-types`) and whether they hold one or many targets (`cardinality`) all come from the kind schema.
+* Writing both ends of a relation is kind's job: give the field an `inverse` and kind mirrors the link onto the target, whatever wrote it.
+* Ports for sq/streams rows come from the separate `rimir/streams-ports` bridge, so ports itself knows nothing about streams.
+
+</$fill>
+</$transclude>

@@ -1,0 +1,16 @@
+{
+    "title": "$:/plugins/rimir/ports",
+    "description": "Drag-to-connect ports on kind instances: link tiddlers by drawing a wire from a ref field",
+    "name": "ports",
+    "author": "rimir",
+    "version": "0.1.0",
+    "core-version": ">=5.4.0",
+    "source": "https://github.com/rimir-cc/tw-ports",
+    "plugin-type": "plugin",
+    "list": "readme documentation settings changelog license",
+    "dependents": "$:/plugins/rimir/kind $:/plugins/rimir/theme",
+    "soft-dependents": [
+        "$:/plugins/rimir/doc-template",
+        "$:/plugins/rimir/streams-ports"
+    ]
+}

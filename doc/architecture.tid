@@ -1,0 +1,49 @@
+created: 20261029120000000
+modified: 20261029120000000
+rdt.hub-category: ui-framework
+rdt.hub-category-name: UI Framework & Domain Model
+rdt.hub-order: 20
+rdt.order: 2
+rdt.plugin-key: ports
+rdt.plugin-name: ports
+rdt.plugin-subtitle: Drag-to-connect ports on kind instances
+rdt.section: Architecture
+title: $:/plugins/rimir/ports/doc/architecture
+type: text/vnd.tiddlywiki
+
+<$transclude $tiddler="$:/plugins/rimir/doc-template/templates/page">
+<$fill $name="body">
+
+!! Pieces
+
+|!Tiddler |!Role |
+|`viewtemplate` |ViewTemplate segment: transcludes `handle` for every story tiddler with a `kind.type` |
+|`handle` |The handle of one instance. Reads `ports-tid`, `ports-exclude`, `ports-variant` from scope; renders nothing without ports. Bridges (streams-ports) reuse it |
+|`layer` |PageTemplate segment: the `<$ports-layer>` widget wrapping `flyout` and `dock` |
+|`ports-layer.js` |The only JS module: hover timing, drag, wires, typing while dragging, the field write |
+|`flyout`, `port-row` |Port list of the hovered handle, from `$:/temp/rimir/ports/flyout` |
+|`dock`, `dock-drag`, `dock-browse`, `dock-tile` |The dock; drag mode reads `$:/temp/rimir/ports/drag` |
+|`targets/*` |Drop target specs (dock tile, story tiddler) |
+|`engine` |Functions (`ports.fields`, `ports.values`, `ports.candidates`, option-source matching) on top of kind's engine |
+
+!! Flow of a drag
+
+```
+hover .ports-handle ──► $:/temp/rimir/ports/flyout {src, exclude}  ──► flyout renders
+press + move a row  ──► $:/temp/rimir/ports/drag {src, field, search} ──► dock opens, lists candidates
+typing              ──► drag!!search                                ──► dock filters
+release on target   ──► src.<field> written (plain addTiddler)      ──► kind inverse sync mirrors it
+```
+
+The widget hit-tests with `elementFromPoint` and takes the innermost element matching a //target spec//: tiddlers tagged `$:/tags/rimir/ports/target` with a CSS `selector` and the `title-attribute` holding the tiddler title. Ports ships specs for dock tiles and story tiddlers; bridges add their own (streams-ports adds stream rows). During a drag, valid targets get the class `ports-valid`, the one under the pointer `ports-hover`; while a port is hovered, its visible targets get `ports-peek`. A target is valid when it is a kind instance whose type is in the field's `ref-types` (any instance when empty) and is not the source.
+
+!! Placement
+
+The handle is absolutely positioned against `.tc-tiddler-frame` (which Vanilla gives `position: relative`) at `right: -8px`, so it sits on the border and takes no layout space. A bridge that leaves `top` unset gets the handle at its own vertical position inside the frame — that is how stream rows line up on the same border.
+
+!! State tiddlers
+
+All transient state lives under `$:/temp/` (not synced, not saved). Only the recent targets per field persist, in `$:/state/rimir/ports/recent/<field>`.
+
+</$fill>
+</$transclude>

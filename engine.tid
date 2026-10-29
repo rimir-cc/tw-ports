@@ -1,0 +1,33 @@
+title: $:/plugins/rimir/ports/engine
+type: text/vnd.tiddlywiki
+
+\whitespace trim
+<!-- Functions of rimir/ports. Import together with $:/plugins/rimir/kind/engine:
+     \import $:/plugins/rimir/kind/engine $:/plugins/rimir/ports/engine -->
+
+\function ports.enabled() [[$:/config/rimir/ports/enable]get[text]trim[]!match[no]then[yes]] ~[[$:/config/rimir/ports/enable]!is[tiddler]then[yes]]
+\function ports.type-tid(tid) [<tid>get[kind.type]] :map[function[kind.locate-type],<currentTiddler>]
+
+<!-- Ports of an instance = its kind's ref fields, in schema order, minus `exclude` (title list) -->
+\function ports.fields(type-tid, exclude) [function[kind.field-keys],<type-tid>] :filter[function[kind.is-ref-typed],<type-tid>,<currentTiddler>] -[enlist<exclude>]
+\function ports.filled(type-tid, tid, exclude) [function[ports.fields],<type-tid>,<exclude>] :filter[<tid>has<currentTiddler>]
+\function ports.empty(type-tid, tid, exclude) [function[ports.fields],<type-tid>,<exclude>] :filter[<tid>!has<currentTiddler>]
+
+<!-- Linked titles of one port (single fields stay whole even with spaces) -->
+\function ports.values(type-tid, tid, field-key) [function[kind.field-cardinality],<type-tid>,<field-key>match[multi]] :map:flat[<tid>get<field-key>enlist-input[]] ~[<tid>get<field-key>] +[!is[blank]]
+\function ports.count(type-tid, tid, exclude) [function[ports.filled],<type-tid>,<tid>,<exclude>] :map:flat[function[ports.values],<type-tid>,<tid>,<currentTiddler>] +[count[]]
+
+<!-- Option sources: config tiddlers that narrow what the dock offers for a port.
+     Optional selectors kind / field / ref-type; the most specific match wins. -->
+\function ports.option-sources() [all[shadows+tiddlers]tag[$:/tags/rimir/ports/option-source]!is[draft]]
+\function ports.os-kind-ok(os, src-kind) [<os>!has[kind]then[ok]] [<os>get[kind]match<src-kind>then[ok]] +[first[]]
+\function ports.os-field-ok(os, field-key) [<os>!has[field]then[ok]] [<os>get[field]match<field-key>then[ok]] +[first[]]
+\function ports.os-ref-ok(os, type-tid, field-key) [function[kind.ref-types],<type-tid>,<field-key>] :filter[<os>get[ref-type]match<currentTiddler>] :map[[ok]] [<os>!has[ref-type]then[ok]] +[first[]]
+\function ports.os-score(os) [<os>has[kind]then[4]] [<os>has[field]then[2]] [<os>has[ref-type]then[1]] [[0]] +[sum[]]
+\function ports.option-source(type-tid, field-key, src-kind) [function[ports.option-sources]] :filter[function[ports.os-kind-ok],<currentTiddler>,<src-kind>] :filter[function[ports.os-field-ok],<currentTiddler>,<field-key>] :filter[function[ports.os-ref-ok],<currentTiddler>,<type-tid>,<field-key>] :sort:number:reverse[function[ports.os-score],<currentTiddler>] +[first[]]
+\function ports.option-filter(os) [<os>get[filter]!is[blank]] ~[[$:/plugins/rimir/ports/default-option-filter]get[text]trim[]]
+
+<!-- Dock candidates for a port: kind's ref candidates, narrowed by the option filter and the typed search -->
+\function ports.candidates(type-tid, field-key, src, opt, q) [function[kind.ref-candidates],<type-tid>,<field-key>] -[<src>] +[subfilter<opt>] +[search:caption,title:literal<q>]
+\function ports.recent(field-key) [[$:/state/rimir/ports/recent/]addsuffix<field-key>get[list]enlist-input[]]
+\function ports.caption(tid) [<tid>get[caption]!is[blank]] ~[<tid>]

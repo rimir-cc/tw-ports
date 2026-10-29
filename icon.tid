@@ -1,0 +1,4 @@
+title: $:/plugins/rimir/ports/icon
+type: image/svg+xml
+
+<svg width="22pt" height="22pt" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#5778d8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="8" height="6" rx="1.5"/><rect x="14" y="14" width="8" height="6" rx="1.5"/><circle cx="10" cy="7" r="1.6" fill="#5778d8"/><circle cx="14" cy="17" r="1.6" fill="#5778d8"/><path d="M11.6 7 C 17 7, 9 17, 12.4 17"/></svg>

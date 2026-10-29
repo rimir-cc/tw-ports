@@ -1,0 +1,43 @@
+title: $:/plugins/rimir/ports/port-row
+type: text/vnd.tiddlywiki
+
+\whitespace trim
+<!-- One port in the flyout. Needs src, type-tid, field-key in scope.
+     Press-and-move starts a drag, a press without moving toggles the target
+     list (both handled by the ports-layer widget). -->
+\procedure ports-unlink()
+<%if [function[kind.field-cardinality],<type-tid>,<field-key>match[multi]] %>
+<$action-listops $tiddler=<<src>> $field=<<field-key>> $subfilter="-[<target>]"/>
+<%else%>
+<$action-setfield $tiddler=<<src>> $field=<<field-key>> $value=""/>
+<%endif%>
+\end
+<$let
+	n={{{ [function[ports.values],<type-tid>,<src>,<field-key>count[]] }}}
+	multi={{{ [function[kind.field-cardinality],<type-tid>,<field-key>match[multi]] }}}
+	expanded={{{ [[$:/temp/rimir/ports/flyout]get[expanded]enlist-input[]match<field-key>] }}}
+>
+<div class={{{ ports-port [<n>!match[0]then[is-filled]] +[join[ ]] }}} data-ports-field=<<field-key>> title={{{ [<n>match[0]then[Drag to connect]else[Drag to add · click to list]] }}}>
+<span class="ports-ico"><$text text={{{ [function[kind.field-icon],<type-tid>,<field-key>] }}}/></span>
+<span class="ports-cap"><$text text={{{ [function[kind.field-caption],<type-tid>,<field-key>] }}}/></span>
+<span class="ports-val">
+<%if [<n>match[0]] %>
+<span class="ports-hint"><$text text={{{ [function[kind.ref-types],<type-tid>,<field-key>join[, ]] ~[[any kind]] }}}/></span>
+<%else%>
+<$text text={{{ [function[ports.values],<type-tid>,<src>,<field-key>first[]] :map[function[ports.caption],<currentTiddler>] }}}/>
+<%if [<multi>match[multi]] %><span class="ports-n"><$text text=<<n>>/></span><%endif%>
+<%endif%>
+</span>
+<span class="ports-dot"/>
+</div>
+<%if [<expanded>match<field-key>] %>
+<div class="ports-chips">
+<$list filter="[function[ports.values],<type-tid>,<src>,<field-key>]" variable="target">
+<div class="ports-chip">
+<$link to=<<target>> class="ports-chip-go"><$text text={{{ [function[kind.inst-icon],<target>] [function[ports.caption],<target>] +[join[ ]] }}}/></$link>
+<$button class="tc-btn-invisible ports-chip-x" tooltip="Unlink" actions=<<ports-unlink>>>×</$button>
+</div>
+</$list>
+</div>
+<%endif%>
+</$let>

@@ -1,0 +1,4 @@
+title: $:/plugins/rimir/ports/notification
+type: text/vnd.tiddlywiki
+
+<$text text=<<ports-message>>/>

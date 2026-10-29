@@ -1,0 +1,6 @@
+title: $:/config/rimir/ports/options/hide-archived
+tags: $:/tags/rimir/ports/option-source
+caption: Hide archived instances
+filter: [!status[archived]]
+
+Applies to every port: no `kind`, `field` or `ref-type` selector is set. Delete this tiddler (or empty its `filter`) to offer archived instances too.

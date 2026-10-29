@@ -1,0 +1,6 @@
+title: $:/plugins/rimir/ports/targets/story-tiddler
+tags: $:/tags/rimir/ports/target
+selector: .tc-tiddler-frame[data-tiddler-title]
+title-attribute: data-tiddler-title
+
+Tiddlers in the story river are drop targets.

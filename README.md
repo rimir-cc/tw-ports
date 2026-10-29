@@ -1,0 +1,30 @@
+# Ports
+
+Link TiddlyWiki tiddlers the way node editors connect blocks: every `ref` field of a [kind](https://github.com/rimir-cc/tw-kind) instance becomes a *port*. Drag a wire from a port onto another tiddler, and the link is written into the field. The story river stays your workspace — no extra view.
+
+## Features
+
+- **One quiet handle per tiddler** — a dot on the tiddler's right border, visible only while you hover the tiddler. Filled when the tiddler has links, with the number of links next to it.
+- **Port flyout** — hovering the handle slides out the ports as labelled rows (icon, caption, linked target or count). Filled ports come first; with more than four ports, the empty ones wait behind *+ N empty ports* and show which kinds they accept.
+- **Drag to connect** — press a port and drag: a wire follows the pointer, tiddlers that fit the port are outlined, and the wire snaps onto the one under the pointer. Release to link. Single-value fields are replaced, multi-value fields get the target added.
+- **Context dock** — a slim strip on the right screen edge. While you drag, it opens by itself and lists what fits the port: recent targets first, then all candidates. Keep holding and type to filter; Esc cancels. It closes again on release. Click the strip to open it by hand.
+- **Option sources** — config tiddlers that narrow the dock per port, kind or accepted type. Ships with one that hides archived instances.
+- **Targets at a glance** — hovering a filled port draws wires to its targets on screen; clicking it lists them, each with × to unlink.
+- **Both ends** — set `inverse` on the kind field and kind mirrors the link onto the target.
+
+## Prerequisites
+
+- [rimir/kind](https://github.com/rimir-cc/tw-kind) — schema (which fields are ports and what they accept) and `inverse` sync
+- [rimir/theme](https://github.com/rimir-cc/tw-theme)
+- Optional: [rimir/streams-ports](https://github.com/rimir-cc/tw-streams-ports) for ports on sq/streams rows
+
+## Quick Start
+
+1. Open a tiddler that has a `kind.type` whose kind defines `ref` fields.
+2. Hover the tiddler, then the dot on its right border.
+3. Drag a port onto another tiddler in the story, or into the dock that opens on the right.
+4. Hover the port again to see the new wire; click it to list or unlink targets.
+
+## License
+
+MIT — see [LICENSE.md](LICENSE.md).

@@ -1,0 +1,14 @@
+title: $:/plugins/rimir/ports/documentation
+type: text/vnd.tiddlywiki
+
+<$list filter="[[$:/plugins/rimir/doc-template]plugin-type[plugin]]" variable="ignore">
+{{$:/plugins/rimir/ports/doc/overview||$:/plugins/rimir/doc-template/doc-viewer}}
+</$list>
+
+<$list filter="[[$:/plugins/rimir/doc-template]plugin-type[plugin]!match[plugin]]" variable="ignore">
+<div class="rr-settings-info-card">
+
+''doc-template'' plugin is not installed. See the <<tag readme>> tab for documentation.
+
+</div>
+</$list>

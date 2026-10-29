@@ -1,0 +1,38 @@
+created: 20261029120000000
+modified: 20261029120000000
+rdt.hub-category: ui-framework
+rdt.hub-category-name: UI Framework & Domain Model
+rdt.hub-order: 20
+rdt.order: 4
+rdt.plugin-key: ports
+rdt.plugin-name: ports
+rdt.plugin-subtitle: Drag-to-connect ports on kind instances
+rdt.section: FAQ
+title: $:/plugins/rimir/ports/doc/faq
+type: text/vnd.tiddlywiki
+
+<$transclude $tiddler="$:/plugins/rimir/doc-template/templates/page">
+<$fill $name="body">
+
+!! Q: Why don't I see a handle?
+
+The tiddler needs a `kind.type`, and its kind needs at least one `ref` field. Untyped tiddlers have no schema and therefore no ports. Also check that ports is enabled in the settings.
+
+!! Q: How do I link both ends?
+
+Add `"inverse": "<field on the target>"` to the ref field in the kind schema. Kind then keeps the target's field in sync, also for links made in kind's own editors or the palette.
+
+!! Q: Why do the target lists open on click, not on hover?
+
+A list that opens on hover pushes the ports below it down, so they move away under the pointer. Hover draws wires to the targets instead, and the row already shows the first target and the count.
+
+!! Q: The dock covers my sidebar.
+
+The collapsed strip is 22px wide; the open dock covers the sidebar only while you drag (it closes on release) or while you opened it by hand.
+
+!! Q: Can I drop on a tiddler that is not in the story?
+
+Yes — on its tile in the dock, which opens while you drag. Type part of its caption to find it.
+
+</$fill>
+</$transclude>

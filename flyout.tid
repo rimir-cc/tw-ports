@@ -1,0 +1,39 @@
+title: $:/plugins/rimir/ports/flyout
+type: text/vnd.tiddlywiki
+
+\whitespace trim
+\import $:/plugins/rimir/kind/engine $:/plugins/rimir/ports/engine
+<!-- Port list of the hovered handle. State: $:/temp/rimir/ports/flyout
+     (src, exclude, expanded = title list of fields showing their targets,
+     show-empty). Positioned by the ports-layer widget. -->
+<$list filter="[[$:/temp/rimir/ports/flyout]is[tiddler]]" variable="_">
+<$let
+	src={{$:/temp/rimir/ports/flyout!!src}}
+	exclude={{$:/temp/rimir/ports/flyout!!exclude}}
+	show-empty={{$:/temp/rimir/ports/flyout!!show-empty}}
+	type-tid={{{ [function[ports.type-tid],<src>] }}}
+	n-fields={{{ [function[ports.fields],<type-tid>,<exclude>count[]] }}}
+	n-empty={{{ [function[ports.empty],<type-tid>,<src>,<exclude>count[]] }}}
+	hide-empty={{{ [<n-fields>compare:integer:gt[4]] :filter[<n-empty>compare:integer:gt[1]] :filter[<show-empty>!match[yes]] :map[[yes]] }}}
+	collapsible={{{ [<n-fields>compare:integer:gt[4]] :filter[<n-empty>compare:integer:gt[1]] :map[[yes]] }}}
+>
+<div class="ports-flyout" data-ports-src=<<src>>>
+<div class="ports-fly-head"><$text text={{{ [function[kind.inst-icon],<src>] [function[ports.caption],<src>] +[join[ ]] }}}/></div>
+<$list filter="[function[ports.filled],<type-tid>,<src>,<exclude>]" variable="field-key">
+<$transclude $tiddler="$:/plugins/rimir/ports/port-row"/>
+</$list>
+<%if [<hide-empty>match[yes]] %>
+<%else%>
+<$list filter="[function[ports.empty],<type-tid>,<src>,<exclude>]" variable="field-key">
+<$transclude $tiddler="$:/plugins/rimir/ports/port-row"/>
+</$list>
+<%endif%>
+<%if [<collapsible>match[yes]] %>
+<$button class="tc-btn-invisible ports-more">
+<$action-setfield $tiddler="$:/temp/rimir/ports/flyout" show-empty={{{ [<show-empty>match[yes]then[]else[yes]] }}}/>
+<$text text={{{ [<show-empty>match[yes]then[Hide empty ports]] ~[<n-empty>addprefix[+ ]addsuffix[ empty ports]] }}}/>
+</$button>
+<%endif%>
+</div>
+</$let>
+</$list>

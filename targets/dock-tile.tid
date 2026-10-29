@@ -1,0 +1,6 @@
+title: $:/plugins/rimir/ports/targets/dock-tile
+tags: $:/tags/rimir/ports/target
+selector: [data-ports-target]
+title-attribute: data-ports-target
+
+Dock tiles are drop targets.

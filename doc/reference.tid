@@ -1,0 +1,80 @@
+created: 20261029120000000
+modified: 20261029120000000
+rdt.hub-category: ui-framework
+rdt.hub-category-name: UI Framework & Domain Model
+rdt.hub-order: 20
+rdt.order: 3
+rdt.plugin-key: ports
+rdt.plugin-name: ports
+rdt.plugin-subtitle: Drag-to-connect ports on kind instances
+rdt.section: Reference
+title: $:/plugins/rimir/ports/doc/reference
+type: text/vnd.tiddlywiki
+
+<$transclude $tiddler="$:/plugins/rimir/doc-template/templates/page">
+<$fill $name="body">
+
+!! Config
+
+|!Tiddler |!Default |!Meaning |
+|`$:/config/rimir/ports/enable` |`yes` |`no` removes handles, flyout and dock |
+|`$:/config/rimir/ports/options/hide-archived` |shipped |Option source with filter `[!status[archived]]` for all ports |
+|`$:/plugins/rimir/ports/default-option-filter` |`[!is[blank]]` |Filter used when no option source applies |
+
+!! Option source tiddlers
+
+Tagged `$:/tags/rimir/ports/option-source`.
+
+|!Field |!Required |!Meaning |
+|`filter` |yes |Runs on the port's candidates (`subfilter`), e.g. `[!status[archived]]` or `[tag[team]]` |
+|`kind` |no |Only for ports of instances of this kind |
+|`field` |no |Only for this field key |
+|`ref-type` |no |Only for fields that accept this kind |
+|`caption` |no |Shown in the dock footer and the settings |
+
+The most specific matching source wins (score: `kind` 4, `field` 2, `ref-type` 1). One source per drag.
+
+!! Drop target specs
+
+Tagged `$:/tags/rimir/ports/target`. Shipped: `$:/plugins/rimir/ports/targets/dock-tile`, `$:/plugins/rimir/ports/targets/story-tiddler`.
+
+|!Field |!Meaning |
+|`selector` |CSS selector of elements that stand for a tiddler, e.g. `.tc-tiddler-frame[data-tiddler-title]` |
+|`title-attribute` |Attribute of that element holding the tiddler title |
+
+The innermost matching element under the pointer is the target. Classes set on targets: `ports-valid` (fits the dragged port), `ports-hover` (under the pointer), `ports-peek` (target of the hovered port).
+
+!! Handle template variables
+
+For bridges that put handles elsewhere (`$:/plugins/rimir/ports/handle`):
+
+|!Variable |!Meaning |
+|`ports-tid` |The instance |
+|`ports-exclude` |Title list of ref fields to leave out |
+|`ports-variant` |Adds class `ports-handle--<variant>`; `tiddler` is used in the story |
+
+!! State
+
+|!Tiddler |!Fields |
+|`$:/temp/rimir/ports/flyout` |`src`, `exclude`, `expanded` (fields listing their targets), `show-empty` |
+|`$:/temp/rimir/ports/drag` |`src`, `field`, `search` |
+|`$:/temp/rimir/ports/dock-search` |Search text when the dock is open by hand |
+|`$:/state/rimir/ports/dock` |`open` while opened by hand |
+|`$:/state/rimir/ports/recent/<field>` |`list` of the last 5 targets |
+
+!! Engine functions
+
+|!Function |!Returns |
+|`ports.fields(type-tid, exclude)` |Ref field keys of the kind, in schema order |
+|`ports.filled(type-tid, tid, exclude)` / `ports.empty(…)` |Ports with / without a value |
+|`ports.values(type-tid, tid, field-key)` |Linked titles of one port |
+|`ports.count(type-tid, tid, exclude)` |Number of links |
+|`ports.option-source(type-tid, field-key, src-kind)` |Title of the option source that applies |
+|`ports.candidates(type-tid, field-key, src, opt, q)` |Dock candidates |
+
+!! Restart
+
+`ports-layer.js` is a widget module: reload the browser page after changing it. Everything else refreshes live.
+
+</$fill>
+</$transclude>

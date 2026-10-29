@@ -1,0 +1,26 @@
+title: $:/plugins/rimir/ports/dock
+type: text/vnd.tiddlywiki
+
+\whitespace trim
+\import $:/plugins/rimir/kind/engine $:/plugins/rimir/ports/engine
+<!-- Fixed dock on the right screen edge. Collapsed to a strip by default;
+     opens by hand ($:/state/rimir/ports/dock = open) and by itself while a
+     port is dragged ($:/temp/rimir/ports/drag exists). -->
+<$let
+	dragging={{{ [[$:/temp/rimir/ports/drag]is[tiddler]then[yes]] }}}
+	manual={{{ [[$:/state/rimir/ports/dock]get[text]match[open]then[yes]] }}}
+>
+<div class={{{ ports-dock [<dragging>match[yes]then[is-open is-drag]] [<manual>match[yes]then[is-open]] +[join[ ]] }}}>
+<$button class="tc-btn-invisible ports-dock-strip" tooltip="Connect dock" aria-label="Toggle the connect dock">
+<$action-setfield $tiddler="$:/state/rimir/ports/dock" text={{{ [<manual>match[yes]then[closed]else[open]] }}}/>
+<span class="ports-dock-strip-ico"/><span class="ports-dock-strip-label">Connect</span>
+</$button>
+<div class="ports-dock-panel">
+<%if [<dragging>match[yes]] %>
+<$transclude $tiddler="$:/plugins/rimir/ports/dock-drag"/>
+<%else%>
+<$transclude $tiddler="$:/plugins/rimir/ports/dock-browse"/>
+<%endif%>
+</div>
+</div>
+</$let>

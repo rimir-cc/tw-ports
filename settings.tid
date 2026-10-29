@@ -1,0 +1,40 @@
+title: $:/plugins/rimir/ports/settings
+type: text/vnd.tiddlywiki
+
+\whitespace trim
+
+!! Ports
+
+<div class="rr-input-row">
+<$checkbox tiddler="$:/config/rimir/ports/enable" field="text" checked="yes" unchecked="no" default="yes"> Show port handles and the connect dock</$checkbox>
+</div>
+
+The handle, flyout and dock are added by `$:/plugins/rimir/ports/viewtemplate` and `$:/plugins/rimir/ports/layer`. Switching off takes effect immediately.
+
+!! Option sources
+
+Tiddlers tagged <<tag "$:/tags/rimir/ports/option-source">> narrow what the dock offers while a port is dragged. Each has a `filter` that runs on the port's candidates (for example `[!status[archived]]`), and optional selectors that say where it applies:
+
+|!Field |!Applies when |
+|`kind` |the dragged port belongs to an instance of this kind |
+|`field` |the dragged port is this field |
+|`ref-type` |the field accepts this kind |
+
+The source with the most specific match wins (`kind` counts most, then `field`, then `ref-type`); without any match, all candidates are offered. Only one source applies to a drag.
+
+<table class="rr-table">
+<tr><th>Option source</th><th>Selectors</th><th>Filter</th></tr>
+<$list filter="[all[shadows+tiddlers]tag[$:/tags/rimir/ports/option-source]!is[draft]sort[title]]" emptyMessage="<tr><td colspan='3'>None.</td></tr>">
+<tr>
+<td><$link><$text text={{{ [{!!caption}!is[blank]] ~[{!!title}] }}}/></$link></td>
+<td><$text text={{{ [all[current]get[kind]addprefix[kind: ]] [all[current]get[field]addprefix[field: ]] [all[current]get[ref-type]addprefix[ref-type: ]] +[join[, ]] ~[[all ports]] }}}/></td>
+<td><$edit-text field="filter" tag="input" class="rr-input" style="width:220px"/></td>
+</tr>
+</$list>
+</table>
+
+!! Recent targets
+
+The dock lists the last targets per field first. They are kept in `$:/state/rimir/ports/recent/<field>`.
+
+<$button class="rr-btn"><$action-deletetiddler $filter="[prefix[$:/state/rimir/ports/recent/]]"/>Forget recent targets</$button>

@@ -1,0 +1,24 @@
+title: $:/plugins/rimir/ports/handle
+type: text/vnd.tiddlywiki
+
+\whitespace trim
+\import $:/plugins/rimir/kind/engine $:/plugins/rimir/ports/engine
+<!-- The port handle of one kind instance. Set these variables (via $let) before transcluding:
+       ports-tid      the instance
+       ports-exclude  title list of ref fields to leave out (optional)
+       ports-variant  "tiddler" (story tiddler) or a bridge's own variant, e.g. "row"
+     Renders nothing when the instance has no ports. -->
+<$let type-tid={{{ [function[ports.type-tid],<ports-tid>] }}}>
+<%if [function[ports.fields],<type-tid>,<ports-exclude>first[]] %>
+<$let n={{{ [function[ports.count],<type-tid>,<ports-tid>,<ports-exclude>] }}}>
+<span
+	class={{{ ports-handle [[ports-handle--]addsuffix<ports-variant>] [<n>!match[0]then[has-links]] +[join[ ]] }}}
+	data-ports-src=<<ports-tid>>
+	data-ports-exclude=<<ports-exclude>>
+	role="button"
+	tabindex="0"
+	aria-label={{{ [<ports-tid>addprefix[Ports of ]] }}}
+><span class="ports-ring"/><span class="ports-count"><$text text={{{ [<n>!match[0]] }}}/></span></span>
+</$let>
+<%endif%>
+</$let>

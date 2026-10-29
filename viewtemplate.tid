@@ -1,0 +1,14 @@
+title: $:/plugins/rimir/ports/viewtemplate
+tags: $:/tags/ViewTemplate
+list-after: $:/core/ui/ViewTemplate/title
+type: text/vnd.tiddlywiki
+
+\whitespace trim
+\import $:/plugins/rimir/ports/engine
+<!-- One handle per story tiddler that is a kind instance. Absolutely positioned
+     against .tc-tiddler-frame, so it takes no space in the layout. -->
+<%if [<currentTiddler>has[kind.type]!has[kind.fields]] :filter[function[ports.enabled]] %>
+<$let ports-tid=<<currentTiddler>> ports-exclude="" ports-variant="tiddler">
+<div class="ports-anchor"><$transclude $tiddler="$:/plugins/rimir/ports/handle"/></div>
+</$let>
+<%endif%>
