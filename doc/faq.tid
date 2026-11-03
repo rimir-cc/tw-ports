@@ -30,6 +30,14 @@ A list that opens on hover pushes the ports below it down, so they move away und
 
 The collapsed strip is 22px wide; the open dock covers the sidebar only while you drag (it closes on release) or while you opened it by hand.
 
+!! Q: How do I link several tiddlers in one go?
+
+Drag the port and tap Shift over each target, or hold Shift and sweep across the dock tiles, then release. Only multi-value ports take several targets. To type a capital into the dock search while dragging, just type it: Shift + a letter never picks.
+
+!! Q: Why does a tapped Shift pick only when I let go of it?
+
+So that typing a capital is not a pick. Shift goes down before the letter, so the widget cannot tell a tap from a capital until it sees whether a letter followed.
+
 !! Q: Can I drop on a tiddler that is not in the story?
 
 Yes — on its tile in the dock, which opens while you drag. Type part of its caption to find it.

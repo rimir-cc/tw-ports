@@ -24,6 +24,7 @@ Ports turns the `ref` fields of [[kind|$:/plugins/rimir/kind]] instances into co
 # ''Hover the handle'' — the port flyout slides out: one row per ref field with its icon, caption and current target (or count).
 # ''Drag'' a port — a wire follows the pointer; tiddlers that fit the port are outlined; the dock on the right opens with the candidates. Type to filter, Esc cancels.
 # ''Release'' on a tiddler or a dock tile — the link is written. Single fields are replaced, multi fields get the target added.
+# ''Several at once'' (multi fields) — while dragging, tap ''Shift'' over each target, or hold Shift and sweep across them; each pick gets a wire. Release links them all, also over empty space.
 # ''Hover'' a filled port to see wires to its visible targets; ''click'' it to list the targets, each with × to unlink.
 
 !! What it builds on

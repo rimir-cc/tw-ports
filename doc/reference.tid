@@ -42,7 +42,22 @@ Tagged `$:/tags/rimir/ports/target`. Shipped: `$:/plugins/rimir/ports/targets/do
 |`selector` |CSS selector of elements that stand for a tiddler, e.g. `.tc-tiddler-frame[data-tiddler-title]` |
 |`title-attribute` |Attribute of that element holding the tiddler title |
 
-The innermost matching element under the pointer is the target. Classes set on targets: `ports-valid` (fits the dragged port), `ports-hover` (under the pointer), `ports-peek` (target of the hovered port).
+The innermost matching element under the pointer is the target. Classes set on targets: `ports-valid` (fits the dragged port), `ports-hover` (under the pointer), `ports-peek` (target of the hovered port), `ports-picked` (picked with Shift), `ports-picked-member` (a member a picked group adds). Every visible element of a title gets the class (a story tiddler and its dock tile). While Shift is held during a drag, `body` has `ports-collecting`.
+
+!! Picking several targets
+
+Only on multi-value fields; on single-value fields Shift does nothing.
+
+|!Gesture (while dragging) |!Effect |
+|Shift tap over a target |Picks it; over a picked target unpicks it |
+|Shift held, moving |Picks the target under the pointer when Shift went down and every valid target the pointer moves onto (adds only, never unpicks) |
+|Shift + letter |Types the capital into the search; the picks of that Shift hold are undone |
+|Shift tap over nothing |No effect |
+|Release over a target |Links all picks plus that target |
+|Release over empty space |Links all picks; without picks the drag is cancelled, as before |
+|Esc |Cancels the drag and all picks |
+
+The drop is one write to the source tiddler. A picked group adds its members not yet linked, never itself; a title reached twice (picked on its own and via a team) is added once. One notification names what was linked and how many were already there.
 
 !! Handle template variables
 
@@ -57,7 +72,7 @@ For bridges that put handles elsewhere (`$:/plugins/rimir/ports/handle`):
 
 |!Tiddler |!Fields |
 |`$:/temp/rimir/ports/flyout` |`src`, `exclude`, `expanded` (fields listing their targets), `show-empty` |
-|`$:/temp/rimir/ports/drag` |`src`, `field`, `search` |
+|`$:/temp/rimir/ports/drag` |`src`, `field`, `search`; with Shift picks also `picked` (title list), `picked-links` (titles the picks add), `picked-skipped` (already linked) |
 |`$:/temp/rimir/ports/dock-search` |Search text when the dock is open by hand |
 |`$:/state/rimir/ports/dock` |`open` while opened by hand |
 |`$:/state/rimir/ports/recent/<field>` |`list` of the last 5 targets |

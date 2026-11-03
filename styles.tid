@@ -291,7 +291,18 @@ type: text/vnd.tiddlywiki
 	outline-offset: 4px;
 }
 
-/* Bridges style their own target elements with .ports-valid / .ports-hover / .ports-peek */
+.tc-tiddler-frame.ports-picked {
+	outline: 2.5px solid <<colour primary>>;
+	outline-offset: 4px;
+}
+
+.tc-tiddler-frame.ports-picked-member {
+	outline: 1.5px dotted <<colour primary>>;
+	outline-offset: 4px;
+}
+
+/* Bridges style their own target elements with .ports-valid / .ports-hover /
+   .ports-peek and, for Shift picks, .ports-picked / .ports-picked-member */
 
 /* ---------- wires ---------- */
 
@@ -325,6 +336,20 @@ type: text/vnd.tiddlywiki
 	opacity: 1;
 	stroke-dasharray: none;
 	stroke-width: 2;
+}
+
+.ports-collecting .ports-wire--drag {
+	opacity: 1;
+	stroke-dasharray: 1 4;
+}
+
+.ports-wire--picked {
+	stroke-width: 2;
+}
+
+.ports-wire--member {
+	opacity: 0.55;
+	stroke-dasharray: 2 4;
 }
 
 .ports-wire-end {
@@ -474,6 +499,25 @@ type: text/vnd.tiddlywiki
 .ports-tile.ports-peek {
 	background: <<colour tiddler-editor-background>>;
 	border-color: <<colour primary>>;
+}
+
+.ports-tile.ports-picked {
+	background: <<colour tiddler-editor-background>>;
+	border-color: <<colour primary>>;
+	box-shadow: inset 3px 0 0 <<colour primary>>;
+}
+
+.ports-tile.ports-picked-member {
+	border-color: <<colour primary>>;
+	border-style: dotted;
+}
+
+.ports-picked-sum {
+	font-size: 12px;
+	color: <<colour primary>>;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
 
 .ports-tile.is-linked {

@@ -20,7 +20,8 @@ type: text/vnd.tiddlywiki
 |`viewtemplate` |ViewTemplate segment: transcludes `handle` for every story tiddler with a `kind.type` |
 |`handle` |The handle of one instance. Reads `ports-tid`, `ports-exclude`, `ports-variant` from scope; renders nothing without ports. Bridges (streams-ports) reuse it |
 |`layer` |PageTemplate segment: the `<$ports-layer>` widget wrapping `flyout` and `dock` |
-|`ports-layer.js` |The only JS module: hover timing, drag, wires, typing while dragging, the field write. A target is valid if kind's `schema.accepts` takes it or `schema.groupMembers` returns members for it; a group drop (`connectGroup`) appends the members not yet linked and reports how many were already there |
+|`ports-layer.js` |The widget: hover timing, drag, Shift picks, wires, typing while dragging. A target is valid if kind's `schema.accepts` takes it or `schema.groupMembers` returns members for it |
+|`connect.js` |Library: what a drop of one or several targets writes (`plan`: members of groups, titles already linked or reached twice, single-value replace) and its notification (`message`). Pure, so the specs cover it without a browser |
 |`flyout`, `port-row` |Port list of the hovered handle, from `$:/temp/rimir/ports/flyout` |
 |`dock`, `dock-drag`, `dock-browse`, `dock-tile` |The dock; drag mode reads `$:/temp/rimir/ports/drag`. A tile is a `$link` (not draggable) around the drop-target div, so a click opens the instance. A drop never clicks a tile: the drag captures the pointer on its flyout row, so the click after release fires there. |
 |`targets/*` |Drop target specs (dock tile, story tiddler) |
@@ -32,12 +33,21 @@ type: text/vnd.tiddlywiki
 hover .ports-handle ──► $:/temp/rimir/ports/flyout {src, exclude}  ──► flyout renders
 press + move a row  ──► $:/temp/rimir/ports/drag {src, field, search} ──► dock opens, lists candidates
 typing              ──► drag!!search                                ──► dock filters
-release on target   ──► src.<field> written (plain addTiddler)      ──► kind inverse sync mirrors it
+Shift tap / sweep   ──► drag!!picked, picked-links, picked-skipped  ──► dock counts, pinned wires
+release             ──► connect.plan(picks + target) ──► src.<field> written once ──► kind inverse sync mirrors it
 ```
 
 A drag starts from a flyout row or from a ref field icon in kind's field bar: kind marks each field icon with `data-kind-src` / `data-kind-field` and `data-kind-ref="yes"` on ref fields, and `pressSource` turns either into the same `{src, key}` source. A flyout row captures the pointer on press; a field bar icon sits inside kind's popup button, so the press is left alone (a plain click opens the field popup) and the pointer is captured only once the drag starts. The click that ends such a drag is eaten in the capture phase (`eatClickAfterDrag`); the flag is reset on the next press, so a drag that ends without a click cannot swallow a later one.
 
 The widget hit-tests with `elementFromPoint` and takes the innermost element matching a //target spec//: tiddlers tagged `$:/tags/rimir/ports/target` with a CSS `selector` and the `title-attribute` holding the tiddler title. Ports ships specs for dock tiles and story tiddlers; bridges add their own (streams-ports adds stream rows). During a drag, valid targets get the class `ports-valid`, the one under the pointer `ports-hover`; while a port is hovered, its visible targets get `ports-peek`. A target is valid when it is a kind instance whose type is in the field's `ref-types` (any instance when empty) and is not the source.
+
+!! Shift picks
+
+A drag carries `picked` (titles in pick order), `plan` (the `connect.plan` of the picks) and `hold` (the current Shift hold, or null). A hold starts on the Shift keydown, or on a pointer move with `shiftKey` set (Shift pressed before the drag), and ends on keyup, or on a pointer move without `shiftKey` (a keyup lost to another window). Each hold remembers the picks it made (`added`), whether the pointer swept onto another target (`swept`), and `tap`: a target already picked under the pointer when Shift went down. Releasing Shift without a sweep unpicks `tap`, so a tap toggles. A letter typed during the hold sets `typed` and removes the hold's own picks: Shift was meant for a capital in the search. Picks of earlier holds stay.
+
+After every pick the widget runs `connect.plan` on the picks and writes the counts into the drag tiddler. The dock only shows them, so the group/duplicate logic lives in one place. The count line in the dock is always there on a multi field (a hint until the first pick): appearing on the first pick, it would push the tiles down under a sweeping pointer.
+
+Wires to picks are redrawn with the other wires. A title can be visible twice, as a story tiddler and a dock tile: both get `ports-picked`, the wire goes to the dock tile. Dock tiles scrolled out of the dock list count as not on screen. The dock re-renders its tiles when the search changes, so the hovered target is hit-tested again when its element was replaced.
 
 !! Placement
 

@@ -19,9 +19,16 @@ It owns everything that needs the pointer:
   `data-kind-src` / `data-kind-field`) is a drag source too: moving past
   DRAG_THRESHOLD drags from that field exactly like from its flyout row; a
   plain click still opens kind's field popup, the click after a drag is eaten
+* on a multi-value field, Shift picks several targets in one drag: a Shift
+  tap toggles the target under the pointer, holding Shift sweeps (every valid
+  target the pointer moves onto is picked), a letter typed during the hold
+  makes it typing and undoes the hold's picks. Picks get pinned wires (team
+  members dashed); releasing links picks + the target under the pointer, also
+  over empty space
 * hovering a filled row draws wires to its targets that are on screen
 
-The ref field write is a plain field write; kind's inverse sync mirrors it.
+The ref field write is one plain field write per drop (see connect.js); kind's
+inverse sync mirrors it.
 
 \*/
 
@@ -29,6 +36,7 @@ The ref field write is a plain field write; kind's inverse sync mirrors it.
 
 var Widget = require("$:/core/modules/widgets/widget.js").widget;
 var schema = require("$:/plugins/rimir/kind/schema.js");
+var connect = require("$:/plugins/rimir/ports/connect.js");
 
 var FLYOUT = "$:/temp/rimir/ports/flyout",
 	DRAG = "$:/temp/rimir/ports/drag",
@@ -84,6 +92,7 @@ PortsLayerWidget.prototype.bind = function() {
 		[doc, "pointerup", function(e) { self.onPointerUp(e); }],
 		[doc, "pointercancel", function() { self.endDrag(false); }],
 		[doc, "keydown", function(e) { self.onKeyDown(e); }, true],
+		[doc, "keyup", function(e) { self.onKeyUp(e); }, true],
 		[doc.defaultView, "scroll", function() { self.relayout(); }, true],
 		[doc.defaultView, "resize", function() { self.relayout(); }]
 	];
@@ -146,11 +155,6 @@ PortsLayerWidget.prototype.defOf = function(src, key) {
 
 PortsLayerWidget.prototype.notify = function(message) {
 	$tw.notifier.display(NOTIFICATION, {variables: {"ports-message": message}});
-};
-
-PortsLayerWidget.prototype.captionOf = function(title) {
-	var tiddler = this.wiki.getTiddler(title);
-	return (tiddler && tiddler.fields.caption) || title;
 };
 
 // ---------- flyout ----------
@@ -375,6 +379,14 @@ PortsLayerWidget.prototype.onPointerMove = function(e) {
 		this.startDrag(this.press.source, e);
 	}
 	if(this.drag) {
+		// Shift held from before the drag, or a keyup lost to another window
+		if(e.shiftKey !== !!this.drag.hold) {
+			if(e.shiftKey) {
+				this.startHold();
+			} else {
+				this.endHold();
+			}
+		}
 		this.moveDrag(e.clientX, e.clientY);
 	}
 };
@@ -410,6 +422,12 @@ PortsLayerWidget.prototype.onKeyDown = function(e) {
 		}
 		return;
 	}
+	if(e.key === "Shift") {
+		if(!e.repeat) {
+			this.startHold();
+		}
+		return;
+	}
 	var search = this.drag.search;
 	if(e.key === "Escape") {
 		this.press = null;
@@ -417,6 +435,7 @@ PortsLayerWidget.prototype.onKeyDown = function(e) {
 	} else if(e.key === "Backspace") {
 		search = search.slice(0, -1);
 	} else if(e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+		this.holdTyped();
 		search += e.key;
 	} else {
 		return;
@@ -425,7 +444,13 @@ PortsLayerWidget.prototype.onKeyDown = function(e) {
 	e.stopPropagation();
 	if(this.drag && search !== this.drag.search) {
 		this.drag.search = search;
-		this.wiki.addTiddler(new $tw.Tiddler(this.wiki.getTiddler(DRAG), {search: search}));
+		this.updateDrag({search: search});
+	}
+};
+
+PortsLayerWidget.prototype.onKeyUp = function(e) {
+	if(this.drag && e.key === "Shift") {
+		this.endHold();
 	}
 };
 
@@ -450,7 +475,8 @@ PortsLayerWidget.prototype.startDrag = function(source, e) {
 		}
 		this.eatClick = true;
 	}
-	this.drag = {src: source.src, key: source.key, def: def, row: row, pos: {x: e.clientX, y: e.clientY}, hit: null, search: ""};
+	this.drag = {src: source.src, key: source.key, def: def, row: row, pos: {x: e.clientX, y: e.clientY}, hit: null, search: "",
+		picked: [], plan: null, hold: null};
 	this.peek = null;
 	row.classList.add("is-source");
 	this.document.body.classList.add("ports-dragging");
@@ -487,6 +513,7 @@ PortsLayerWidget.prototype.moveDrag = function(x, y) {
 			hit.classList.add("ports-hover");
 		}
 		this.drag.hit = hit;
+		this.sweep(hit);
 	}
 	if(!this.frame) {
 		this.frame = requestAnimationFrame(function() {
@@ -502,58 +529,118 @@ PortsLayerWidget.prototype.endDrag = function(commit) {
 		return;
 	}
 	this.drag = null;
-	this.document.body.classList.remove("ports-dragging");
+	this.document.body.classList.remove("ports-dragging", "ports-collecting");
 	Array.prototype.forEach.call(this.document.querySelectorAll(".ports-valid, .ports-hover"), function(el) {
 		el.classList.remove("ports-valid", "ports-hover");
 	});
 	drag.row.classList.remove("is-source");
 	this.wiki.deleteTiddler(DRAG);
-	if(commit && drag.hit) {
-		this.connect(drag.src, drag.def, this.titleOf(drag.hit));
+	var targets = drag.picked.slice(0),
+		hit = drag.hit && this.titleOf(drag.hit);
+	if(hit && targets.indexOf(hit) === -1) {
+		targets.push(hit);
+	}
+	if(commit && targets.length) {
+		this.connect(drag.src, drag.def, targets);
 	}
 	this.drawWires();
 	this.armClose();
 };
 
-PortsLayerWidget.prototype.connect = function(src, def, target) {
-	var tiddler = this.wiki.getTiddler(src),
-		caption = def.caption || def.key;
-	if(!schema.accepts(this.wiki, def, target)) {
-		this.connectGroup(tiddler, def, target, caption);
-		return;
-	}
-	if(schema.values(tiddler, def).indexOf(target) !== -1) {
-		this.notify(this.captionOf(target) + " is already linked as " + caption + ".");
-		return;
-	}
-	var replaced = def.cardinality !== "multi" && schema.values(tiddler, def)[0],
-		update = {};
-	update[def.key] = schema.withValue(tiddler, def, target, true);
-	this.wiki.addTiddler(new $tw.Tiddler(tiddler, update, this.wiki.getModificationFields()));
-	this.remember(def.key, target);
-	this.notify((replaced ? "Replaced " + this.captionOf(replaced) + " with " : "Linked ") +
-		this.captionOf(target) + " as " + caption + " of " + this.captionOf(src) +
-		(def.inverse ? " (also listed on " + this.captionOf(target) + ")" : "") + ".");
+PortsLayerWidget.prototype.updateDrag = function(fields) {
+	this.wiki.addTiddler(new $tw.Tiddler(this.wiki.getTiddler(DRAG), fields));
 };
 
-// A group dropped on a field that takes its members: add the members, not the group
-PortsLayerWidget.prototype.connectGroup = function(tiddler, def, group, caption) {
-	var members = schema.groupMembers(this.wiki, def, group) || [],
-		current = schema.values(tiddler, def),
-		added = members.filter(function(m) { return current.indexOf(m) === -1; }),
-		src = tiddler.fields.title,
-		update = {};
-	if(!added.length) {
-		this.notify(members.length ? "All members of " + this.captionOf(group) + " are already linked as " + caption + "." :
-			this.captionOf(group) + " has no members to link as " + caption + ".");
+// One write for all targets of a drop (see connect.js)
+PortsLayerWidget.prototype.connect = function(src, def, targets) {
+	var self = this,
+		tiddler = this.wiki.getTiddler(src),
+		plan = connect.plan(this.wiki, tiddler, def, targets);
+	if(plan.value !== null) {
+		var update = {};
+		update[def.key] = plan.value;
+		this.wiki.addTiddler(new $tw.Tiddler(tiddler, update, this.wiki.getModificationFields()));
+		targets.forEach(function(target) { self.remember(def.key, target); });
+	}
+	this.notify(connect.message(this.wiki, def, src, plan));
+};
+
+// ---------- picking ----------
+
+// One Shift hold. `added` are the picks this hold made (undone if it turns into
+// typing); `tap` is a target that was already picked under the pointer when
+// Shift went down: releasing Shift without having swept unpicks it.
+
+PortsLayerWidget.prototype.startHold = function() {
+	if(!this.drag || this.drag.hold || this.drag.def.cardinality !== "multi") {
 		return;
 	}
-	update[def.key] = $tw.utils.stringifyList(current.concat(added));
-	this.wiki.addTiddler(new $tw.Tiddler(tiddler, update, this.wiki.getModificationFields()));
-	this.remember(def.key, group);
-	this.notify("Linked " + added.length + " member" + (added.length === 1 ? "" : "s") + " of " + this.captionOf(group) +
-		" as " + caption + " of " + this.captionOf(src) +
-		(added.length < members.length ? " (" + (members.length - added.length) + " already linked)" : "") + ".");
+	var title = this.drag.hit && this.titleOf(this.drag.hit);
+	this.drag.hold = {added: [], typed: false, swept: false, tap: null};
+	if(title && this.drag.picked.indexOf(title) !== -1) {
+		this.drag.hold.tap = title;
+	} else {
+		this.pick(title);
+	}
+	this.document.body.classList.add("ports-collecting");
+	this.drawWires();
+};
+
+PortsLayerWidget.prototype.sweep = function(hit) {
+	var hold = this.drag.hold,
+		title = hit && this.titleOf(hit);
+	if(hold && !hold.typed && title && title !== hold.tap) {
+		hold.swept = true;
+		this.pick(title);
+	}
+};
+
+PortsLayerWidget.prototype.pick = function(title) {
+	if(title && this.drag.picked.indexOf(title) === -1) {
+		this.drag.picked.push(title);
+		this.drag.hold.added.push(title);
+		this.syncPicked();
+	}
+};
+
+// A letter typed while Shift is down is a capital for the search, not a pick
+PortsLayerWidget.prototype.holdTyped = function() {
+	var hold = this.drag.hold;
+	if(!hold || hold.typed) {
+		return;
+	}
+	hold.typed = true;
+	if(hold.added.length) {
+		this.drag.picked = this.drag.picked.filter(function(title) { return hold.added.indexOf(title) === -1; });
+		hold.added = [];
+		this.syncPicked();
+	}
+};
+
+PortsLayerWidget.prototype.endHold = function() {
+	var hold = this.drag && this.drag.hold;
+	if(!hold) {
+		return;
+	}
+	this.drag.hold = null;
+	this.document.body.classList.remove("ports-collecting");
+	if(hold.tap && !hold.swept && !hold.typed) {
+		this.drag.picked.splice(this.drag.picked.indexOf(hold.tap), 1);
+		this.syncPicked();
+	}
+	this.drawWires();
+};
+
+// The dock shows what the picks add; the wires need the members of picked groups
+PortsLayerWidget.prototype.syncPicked = function() {
+	var plan = connect.plan(this.wiki, this.wiki.getTiddler(this.drag.src), this.drag.def, this.drag.picked);
+	this.drag.plan = this.drag.picked.length ? plan : null;
+	this.updateDrag({
+		picked: $tw.utils.stringifyList(this.drag.picked),
+		"picked-links": String(plan.added.length),
+		"picked-skipped": String(plan.skipped)
+	});
+	this.drawWires();
 };
 
 PortsLayerWidget.prototype.remember = function(key, target) {
@@ -577,12 +664,27 @@ PortsLayerWidget.prototype.relayout = function() {
 	});
 };
 
-PortsLayerWidget.prototype.findOnScreen = function(title) {
+// Every visible element that stands for `title` (a story tiddler and a dock tile can both be there)
+PortsLayerWidget.prototype.allOnScreen = function(title) {
 	var self = this,
 		selector = this.targetSelector();
 	return Array.prototype.filter.call(selector ? this.document.querySelectorAll(selector) : [], function(el) {
 		return self.titleOf(el) === title && isOnScreen(el);
-	})[0] || null;
+	});
+};
+
+PortsLayerWidget.prototype.findOnScreen = function(title) {
+	return this.allOnScreen(title)[0] || null;
+};
+
+// Marks every visible element of a pick and wires the dock tile, else the first one
+PortsLayerWidget.prototype.pinWire = function(out, from, title, cls, wireCls, dot) {
+	var els = this.allOnScreen(title);
+	els.forEach(function(el) { el.classList.add(cls); });
+	var el = els.filter(function(e) { return e.hasAttribute("data-ports-target"); })[0] || els[0];
+	if(el) {
+		out.push(wire(wireCls, from, anchorOf(el, from), dot));
+	}
 };
 
 PortsLayerWidget.prototype.drawWires = function() {
@@ -591,8 +693,8 @@ PortsLayerWidget.prototype.drawWires = function() {
 	}
 	var self = this,
 		out = [];
-	Array.prototype.forEach.call(this.document.querySelectorAll(".ports-peek"), function(el) {
-		el.classList.remove("ports-peek");
+	Array.prototype.forEach.call(this.document.querySelectorAll(".ports-peek, .ports-picked, .ports-picked-member"), function(el) {
+		el.classList.remove("ports-peek", "ports-picked", "ports-picked-member");
 	});
 	var fly = this.flyoutNode(),
 		state = this.flyoutState();
@@ -612,19 +714,41 @@ PortsLayerWidget.prototype.drawWires = function() {
 		}
 	}
 	if(this.drag && this.document.body.contains(this.drag.row)) {
-		var from = centerOf(this.drag.row.querySelector(".ports-dot") || this.drag.row),
-			to = this.drag.hit ? anchorOf(this.drag.hit, from) : this.drag.pos;
+		var from = centerOf(this.drag.row.querySelector(".ports-dot") || this.drag.row);
+		this.refreshHit();
+		// Pinned wires to the picks; a picked group also to its members it adds
+		(this.drag.plan ? this.drag.plan.items : []).forEach(function(item) {
+			self.pinWire(out, from, item.target, "ports-picked", "ports-wire--picked", 3.5);
+			(item.members ? item.added : []).forEach(function(member) {
+				self.pinWire(out, from, member, "ports-picked-member", "ports-wire--member", 2.5);
+			});
+		});
+		var to = this.drag.hit ? anchorOf(this.drag.hit, from) : this.drag.pos;
 		out.push(wire("ports-wire--drag" + (this.drag.hit ? " is-snapped" : ""), from, to, this.drag.hit ? 4 : 3));
 	}
 	this.svg.innerHTML = out.join("");
 };
 
+// The dock re-renders its tiles while typing: find the target under the pointer again
+PortsLayerWidget.prototype.refreshHit = function() {
+	var hit = this.drag.hit;
+	if(hit && !this.document.body.contains(hit)) {
+		hit = this.hitTest(this.drag.pos.x, this.drag.pos.y);
+		if(hit) {
+			hit.classList.add("ports-hover");
+		}
+		this.drag.hit = hit;
+	}
+};
+
 // ---------- geometry ----------
 
+// Inside the window, and for a dock tile inside the visible part of the dock list
 function isOnScreen(el) {
 	var r = el.getBoundingClientRect(),
-		win = el.ownerDocument.defaultView;
-	return r.width > 0 && r.bottom > 0 && r.top < win.innerHeight;
+		list = el.closest(".ports-dock-list"),
+		box = list ? list.getBoundingClientRect() : {top: 0, bottom: el.ownerDocument.defaultView.innerHeight};
+	return r.width > 0 && r.bottom > box.top && r.top < box.bottom;
 }
 
 function centerOf(el) {

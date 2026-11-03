@@ -28,6 +28,18 @@ type: text/vnd.tiddlywiki
 <div class="ports-dock-sub"><$text text={{{ [function[ports.caption],<src>addprefix[of ]] [<accepts>addprefix[accepts ]] [<inverse>!is[blank]addprefix[mirrors to ]] +[join[ · ]] }}}/></div>
 </div>
 <div class={{{ ports-search is-live [<q>is[blank]then[is-empty]] +[join[ ]] }}}><%if [<q>is[blank]] %>Keep holding and type to filter…<%else%><$text text=<<q>>/><%endif%></div>
+<!-- Picks (Shift, multi fields) are counted by the ports-layer widget, which
+     also resolves picked groups to the members they add -->
+<$let
+	n-picked={{{ [enlist{$:/temp/rimir/ports/drag!!picked}count[]] }}}
+	n-links={{$:/temp/rimir/ports/drag!!picked-links}}
+	n-skipped={{$:/temp/rimir/ports/drag!!picked-skipped}}
+>
+<!-- Always there on a multi field, so tiles do not shift under a sweep -->
+<%if [<multi>match[multi]] %>
+<div class="ports-picked-sum"><%if [<n-picked>match[0]] %>Shift picks several · tap or hold to sweep<%else%><$text text={{{ [<n-picked>addsuffix[ picked]] [<n-links>addsuffix[ to link]] [<n-skipped>!match[0]!is[blank]addsuffix[ already linked]] +[join[ · ]] }}}/><%endif%></div>
+<%endif%>
+</$let>
 <div class="ports-dock-list">
 <%if [<recent>!is[blank]] %>
 <div class="ports-sec">Recent</div>
@@ -45,7 +57,7 @@ type: text/vnd.tiddlywiki
 <%endif%>
 </div>
 <div class="ports-dock-foot">
-<%if [<os>!is[blank]] %>Options from&#32;<$link to=<<os>>><$text text={{{ [<os>get[caption]] ~[<os>] }}}/></$link>.&#32;<%else%>All instances of the accepted kinds.&#32;<%endif%>Recent first. Esc cancels.
+<%if [<os>!is[blank]] %>Options from&#32;<$link to=<<os>>><$text text={{{ [<os>get[caption]] ~[<os>] }}}/></$link>.&#32;<%else%>All instances of the accepted kinds.&#32;<%endif%>Recent first.&#32;<%if [<multi>match[multi]] %>Release links all picks.&#32;<%endif%>Esc cancels.
 </div>
 </$let>
 </$let>
