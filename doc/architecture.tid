@@ -22,7 +22,7 @@ type: text/vnd.tiddlywiki
 |`layer` |PageTemplate segment: the `<$ports-layer>` widget wrapping `flyout` and `dock` |
 |`ports-layer.js` |The only JS module: hover timing, drag, wires, typing while dragging, the field write |
 |`flyout`, `port-row` |Port list of the hovered handle, from `$:/temp/rimir/ports/flyout` |
-|`dock`, `dock-drag`, `dock-browse`, `dock-tile` |The dock; drag mode reads `$:/temp/rimir/ports/drag` |
+|`dock`, `dock-drag`, `dock-browse`, `dock-tile` |The dock; drag mode reads `$:/temp/rimir/ports/drag`. A tile is a `$link` (not draggable) around the drop-target div, so a click opens the instance. A drop never clicks a tile: the drag captures the pointer on its flyout row, so the click after release fires there. |
 |`targets/*` |Drop target specs (dock tile, story tiddler) |
 |`engine` |Functions (`ports.fields`, `ports.values`, `ports.candidates`, option-source matching) on top of kind's engine |
 
