@@ -4,6 +4,7 @@ type: text/vnd.tiddlywiki
 ! Changelog
 
 |!Version |!Date |!Changes |
+|v0.1.4 |2026-11-03 |Drag from kind's field bar: the icon of a ref field (tiddler view and stream rows) starts a drag like the field's flyout row and adds the dropped tiddler to that field; a plain click still opens kind's field popup, the click after a drag is eaten. Needs kind 0.1.97 (field icons carry `data-kind-*`). |
 |v0.1.3 |2026-11-03 |Groups: on a multi port that takes a group's member kind but not the group (kind `kind.group-of`, needs kind ≥ 0.1.91), the group is a valid target and listed in the dock with its member count; dropping it appends the members not linked yet. |
 |v0.1.2 |2026-11-03 |Clicking a dock tile opens that instance in the story (tile is a non-draggable `$link`); dropping a port on a tile still only links it. |
 |v0.1.1 |2026-10-29 |Dock candidates sorted by caption (deterministic order). |

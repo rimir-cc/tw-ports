@@ -35,6 +35,8 @@ typing              ──► drag!!search                                ──
 release on target   ──► src.<field> written (plain addTiddler)      ──► kind inverse sync mirrors it
 ```
 
+A drag starts from a flyout row or from a ref field icon in kind's field bar: kind marks each field icon with `data-kind-src` / `data-kind-field` and `data-kind-ref="yes"` on ref fields, and `pressSource` turns either into the same `{src, key}` source. A flyout row captures the pointer on press; a field bar icon sits inside kind's popup button, so the press is left alone (a plain click opens the field popup) and the pointer is captured only once the drag starts. The click that ends such a drag is eaten in the capture phase (`eatClickAfterDrag`); the flag is reset on the next press, so a drag that ends without a click cannot swallow a later one.
+
 The widget hit-tests with `elementFromPoint` and takes the innermost element matching a //target spec//: tiddlers tagged `$:/tags/rimir/ports/target` with a CSS `selector` and the `title-attribute` holding the tiddler title. Ports ships specs for dock tiles and story tiddlers; bridges add their own (streams-ports adds stream rows). During a drag, valid targets get the class `ports-valid`, the one under the pointer `ports-hover`; while a port is hovered, its visible targets get `ports-peek`. A target is valid when it is a kind instance whose type is in the field's `ref-types` (any instance when empty) and is not the source.
 
 !! Placement

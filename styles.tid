@@ -262,6 +262,16 @@ type: text/vnd.tiddlywiki
 	color: <<colour primary>>;
 }
 
+/* ---------- drag sources in kind's field bar ---------- */
+
+.kind-field-bar [data-kind-ref="yes"] {
+	cursor: grab;
+}
+
+.kind-field-bar [data-kind-ref="yes"].is-source {
+	color: <<colour primary>>;
+}
+
 /* ---------- drag targets ---------- */
 
 .ports-dragging,

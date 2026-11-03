@@ -15,6 +15,10 @@ It owns everything that needs the pointer:
   the dock (which opens itself) are highlighted, typing filters the dock, Esc
   cancels, releasing on a target writes the ref field
 * pressing a filled row without moving toggles its target list
+* the icon of a ref field in kind's field bar (`[data-kind-ref=yes]`, carrying
+  `data-kind-src` / `data-kind-field`) is a drag source too: moving past
+  DRAG_THRESHOLD drags from that field exactly like from its flyout row; a
+  plain click still opens kind's field popup, the click after a drag is eaten
 * hovering a filled row draws wires to its targets that are on screen
 
 The ref field write is a plain field write; kind's inverse sync mirrors it.
@@ -74,6 +78,7 @@ PortsLayerWidget.prototype.bind = function() {
 		[doc, "pointerover", function(e) { self.onPointerOver(e); }],
 		[doc, "pointerout", function(e) { self.onPointerOut(e); }],
 		[doc, "click", function(e) { self.onClick(e); }],
+		[doc, "click", function(e) { self.eatClickAfterDrag(e); }, true],
 		[doc, "pointerdown", function(e) { self.onPointerDown(e); }],
 		[doc, "pointermove", function(e) { self.onPointerMove(e); }],
 		[doc, "pointerup", function(e) { self.onPointerUp(e); }],
@@ -330,16 +335,36 @@ PortsLayerWidget.prototype.onClick = function(e) {
 	}
 };
 
+// A press that can become a drag: a flyout row (source = the flyout's instance)
+// or a ref field icon in kind's field bar (source named on the icon)
+PortsLayerWidget.prototype.pressSource = function(target) {
+	if(!target.closest) {
+		return null;
+	}
+	var row = target.closest(".ports-flyout [data-ports-field]");
+	if(row) {
+		var state = this.flyoutState();
+		return state ? {el: row, src: state.src, key: row.getAttribute("data-ports-field"), row: true} : null;
+	}
+	var icon = target.closest(".kind-field-bar [data-kind-ref='yes']");
+	return icon ? {el: icon, src: icon.getAttribute("data-kind-src"), key: icon.getAttribute("data-kind-field"), row: false} : null;
+};
+
 PortsLayerWidget.prototype.onPointerDown = function(e) {
-	var row = e.target.closest && e.target.closest(".ports-flyout [data-ports-field]");
-	if(!row || e.button > 0) {
+	this.eatClick = false;
+	var source = e.button > 0 ? null : this.pressSource(e.target);
+	if(!source) {
 		return;
 	}
-	this.press = {row: row, x: e.clientX, y: e.clientY, id: e.pointerId};
-	if(row.setPointerCapture) {
-		row.setPointerCapture(e.pointerId);
+	this.press = {source: source, x: e.clientX, y: e.clientY, id: e.pointerId};
+	// A field bar icon sits in kind's popup button: leave the press alone so a
+	// plain click still opens the field popup; capture only once a drag starts
+	if(source.row) {
+		if(source.el.setPointerCapture) {
+			source.el.setPointerCapture(e.pointerId);
+		}
+		e.preventDefault();
 	}
-	e.preventDefault();
 };
 
 PortsLayerWidget.prototype.onPointerMove = function(e) {
@@ -347,7 +372,7 @@ PortsLayerWidget.prototype.onPointerMove = function(e) {
 		return;
 	}
 	if(!this.drag && Math.hypot(e.clientX - this.press.x, e.clientY - this.press.y) > DRAG_THRESHOLD) {
-		this.startDrag(this.press.row, e);
+		this.startDrag(this.press.source, e);
 	}
 	if(this.drag) {
 		this.moveDrag(e.clientX, e.clientY);
@@ -363,8 +388,17 @@ PortsLayerWidget.prototype.onPointerUp = function(e) {
 	if(this.drag) {
 		this.moveDrag(e.clientX, e.clientY);
 		this.endDrag(true);
-	} else if(press.row.classList.contains("is-filled")) {
-		this.toggleExpanded(press.row.getAttribute("data-ports-field"));
+	} else if(press.source.row && press.source.el.classList.contains("is-filled")) {
+		this.toggleExpanded(press.source.key);
+	}
+};
+
+// The click that follows a drag from a field bar icon would open kind's popup
+PortsLayerWidget.prototype.eatClickAfterDrag = function(e) {
+	if(this.eatClick) {
+		this.eatClick = false;
+		e.preventDefault();
+		e.stopPropagation();
 	}
 };
 
@@ -397,18 +431,30 @@ PortsLayerWidget.prototype.onKeyDown = function(e) {
 
 // ---------- drag ----------
 
-PortsLayerWidget.prototype.startDrag = function(row, e) {
-	var state = this.flyoutState(),
-		key = row.getAttribute("data-ports-field"),
-		def = state && this.defOf(state.src, key);
-	if(!def) {
+PortsLayerWidget.prototype.startDrag = function(source, e) {
+	var def = source.src && source.key && this.defOf(source.src, source.key);
+	if(!def || def.typed !== "ref") {
+		this.press = null;
 		return;
 	}
-	this.drag = {src: state.src, key: key, def: def, row: row, pos: {x: e.clientX, y: e.clientY}, hit: null, search: ""};
+	var row = source.el;
+	if(!source.row) {
+		// From here on the drag owns the pointer: no text selection, and the
+		// click that ends it must not reach kind's popup button
+		if(row.setPointerCapture) {
+			row.setPointerCapture(e.pointerId);
+		}
+		var selection = this.document.defaultView.getSelection && this.document.defaultView.getSelection();
+		if(selection) {
+			selection.removeAllRanges();
+		}
+		this.eatClick = true;
+	}
+	this.drag = {src: source.src, key: source.key, def: def, row: row, pos: {x: e.clientX, y: e.clientY}, hit: null, search: ""};
 	this.peek = null;
 	row.classList.add("is-source");
 	this.document.body.classList.add("ports-dragging");
-	this.wiki.addTiddler({title: DRAG, src: state.src, field: key, search: ""});
+	this.wiki.addTiddler({title: DRAG, src: source.src, field: source.key, search: ""});
 	var self = this;
 	var selector = this.targetSelector();
 	Array.prototype.forEach.call(selector ? this.document.querySelectorAll(selector) : [], function(el) {
