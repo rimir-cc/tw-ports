@@ -11,6 +11,6 @@ type: text/vnd.tiddlywiki
 <div class={{{ ports-tile [<linked>match[yes]then[is-linked]] +[join[ ]] }}} data-ports-target=<<cand>>>
 <span class="ports-tile-ico"><$text text={{{ [function[kind.inst-icon],<cand>] }}}/></span>
 <span class="ports-tile-cap"><$text text={{{ [function[ports.caption],<cand>] }}}/></span>
-<span class="ports-tile-meta"><%if [<linked>match[yes]] %>✓ linked<%else%><$text text={{{ [<cand>get[kind.type]] }}}/><%endif%></span>
+<span class="ports-tile-meta"><%if [<linked>match[yes]] %>✓ linked<%else%><$text text={{{ [<cand>get[kind.type]] [function[kind.group-member-note],<type-tid>,<field-key>,<cand>] +[join[ · ]] }}}/><%endif%></span>
 </div>
 </$link>

@@ -70,6 +70,20 @@ describe("ports engine", function() {
 		expect(list("[function[ports.count],<type-tid>,[PT Atlas],[owner]]")).toBe("2");
 	});
 
+	it("offers groups whose members fit a multi port, not on single ports", function() {
+		var team = {title: PREFIX + "type/pt-team", "kind.type": "pt-team", "kind.group-of": "crew",
+			"kind.fields": JSON.stringify([{key: "crew", typed: "ref", cardinality: "multi", "ref-types": ["pt-person"]}])};
+		$tw.wiki.addTiddler(team);
+		$tw.wiki.addTiddler({title: "PT Crew", "kind.type": "pt-team", crew: "[[PT Tom]]"});
+		try {
+			expect(list("[function[ports.candidates],<type-tid>,[members],[PT Atlas],<opt-all>,[crew]]")).toBe("[[PT Crew]]");
+			expect(list("[function[ports.candidates],<type-tid>,[owner],[PT Atlas],<opt-all>,[crew]]")).toBe("");
+		} finally {
+			$tw.wiki.deleteTiddler("PT Crew");
+			$tw.wiki.deleteTiddler(team.title);
+		}
+	});
+
 	it("offers candidates of the accepted kind, minus the source, filtered and searched", function() {
 		expect(list("[function[ports.candidates],<type-tid>,[members],[PT Atlas],<opt-all>,[]]")).toBe("[[PT Anna Berger]] [[PT Old]] [[PT Tom]]");
 		expect(list("[function[ports.candidates],<type-tid>,[members],[PT Atlas],<opt-active>,[]]")).toBe("[[PT Anna Berger]] [[PT Tom]]");

@@ -20,7 +20,7 @@ type: text/vnd.tiddlywiki
 |`viewtemplate` |ViewTemplate segment: transcludes `handle` for every story tiddler with a `kind.type` |
 |`handle` |The handle of one instance. Reads `ports-tid`, `ports-exclude`, `ports-variant` from scope; renders nothing without ports. Bridges (streams-ports) reuse it |
 |`layer` |PageTemplate segment: the `<$ports-layer>` widget wrapping `flyout` and `dock` |
-|`ports-layer.js` |The only JS module: hover timing, drag, wires, typing while dragging, the field write |
+|`ports-layer.js` |The only JS module: hover timing, drag, wires, typing while dragging, the field write. A target is valid if kind's `schema.accepts` takes it or `schema.groupMembers` returns members for it; a group drop (`connectGroup`) appends the members not yet linked and reports how many were already there |
 |`flyout`, `port-row` |Port list of the hovered handle, from `$:/temp/rimir/ports/flyout` |
 |`dock`, `dock-drag`, `dock-browse`, `dock-tile` |The dock; drag mode reads `$:/temp/rimir/ports/drag`. A tile is a `$link` (not draggable) around the drop-target div, so a click opens the instance. A drop never clicks a tile: the drag captures the pointer on its flyout row, so the click after release fires there. |
 |`targets/*` |Drop target specs (dock tile, story tiddler) |

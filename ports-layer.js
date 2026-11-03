@@ -420,7 +420,8 @@ PortsLayerWidget.prototype.startDrag = function(row, e) {
 };
 
 PortsLayerWidget.prototype.isValid = function(title) {
-	return !!title && title !== this.drag.src && schema.accepts(this.wiki, this.drag.def, title);
+	return !!title && title !== this.drag.src &&
+		(schema.accepts(this.wiki, this.drag.def, title) || !!schema.groupMembers(this.wiki, this.drag.def, title));
 };
 
 PortsLayerWidget.prototype.hitTest = function(x, y) {
@@ -471,6 +472,10 @@ PortsLayerWidget.prototype.endDrag = function(commit) {
 PortsLayerWidget.prototype.connect = function(src, def, target) {
 	var tiddler = this.wiki.getTiddler(src),
 		caption = def.caption || def.key;
+	if(!schema.accepts(this.wiki, def, target)) {
+		this.connectGroup(tiddler, def, target, caption);
+		return;
+	}
 	if(schema.values(tiddler, def).indexOf(target) !== -1) {
 		this.notify(this.captionOf(target) + " is already linked as " + caption + ".");
 		return;
@@ -483,6 +488,26 @@ PortsLayerWidget.prototype.connect = function(src, def, target) {
 	this.notify((replaced ? "Replaced " + this.captionOf(replaced) + " with " : "Linked ") +
 		this.captionOf(target) + " as " + caption + " of " + this.captionOf(src) +
 		(def.inverse ? " (also listed on " + this.captionOf(target) + ")" : "") + ".");
+};
+
+// A group dropped on a field that takes its members: add the members, not the group
+PortsLayerWidget.prototype.connectGroup = function(tiddler, def, group, caption) {
+	var members = schema.groupMembers(this.wiki, def, group) || [],
+		current = schema.values(tiddler, def),
+		added = members.filter(function(m) { return current.indexOf(m) === -1; }),
+		src = tiddler.fields.title,
+		update = {};
+	if(!added.length) {
+		this.notify(members.length ? "All members of " + this.captionOf(group) + " are already linked as " + caption + "." :
+			this.captionOf(group) + " has no members to link as " + caption + ".");
+		return;
+	}
+	update[def.key] = $tw.utils.stringifyList(current.concat(added));
+	this.wiki.addTiddler(new $tw.Tiddler(tiddler, update, this.wiki.getModificationFields()));
+	this.remember(def.key, group);
+	this.notify("Linked " + added.length + " member" + (added.length === 1 ? "" : "s") + " of " + this.captionOf(group) +
+		" as " + caption + " of " + this.captionOf(src) +
+		(added.length < members.length ? " (" + (members.length - added.length) + " already linked)" : "") + ".");
 };
 
 PortsLayerWidget.prototype.remember = function(key, target) {
